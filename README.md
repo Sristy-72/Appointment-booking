@@ -2,6 +2,9 @@
 
 This is a simple full-stack appointment booking project. It lets patients choose a doctor, select an available time, and book an appointment. It also has an admin page where appointments can be checked and updated.
 
+Backend Server on Render :- https://appointment-booking-ghdk.onrender.com/
+Frontend Server On Render :-- https://appointment-booking-1-bctw.onrender.com/
+
 ## What this project can do
 
 - Show available doctors and their specializations
@@ -94,5 +97,7 @@ An appointment can have one of these statuses:
 - Cancelled
 
 When a user cancels an appointment, its status changes to `Cancelled`. That time slot becomes available for another booking.
+
+
 
 
