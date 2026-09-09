@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 
-const API = "/api";
+const API = (import.meta.env.VITE_API_URL || "/api").replace(/\/$/, "");
 const statuses = ["Pending", "Confirmed", "Completed", "Cancelled"];
 
 const today = new Date().toISOString().slice(0, 10);
