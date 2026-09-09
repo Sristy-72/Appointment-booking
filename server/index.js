@@ -6,6 +6,7 @@ require("dotenv").config();
 const Appointment = require("./models/Appointment");
 const AppointmentCounter = require("./models/AppointmentCounter");
 const Provider = require("./models/Provider");
+const providerSeedData = require("./data/providers");
 
 const app = express();
 app.use(cors());
@@ -35,6 +36,14 @@ async function nextAppointmentId() {
     { new: true, upsert: true, setDefaultsOnInsert: true },
   );
   return `APT-${year}-${String(counter.value).padStart(3, "0")}`;
+}
+
+async function ensureProviders() {
+  const hasProviders = await Provider.exists({});
+  if (!hasProviders) {
+    await Provider.insertMany(providerSeedData);
+    console.log("Seeded default providers");
+  }
 }
 
 app.get("/api/providers", async (_req, res, next) => {
@@ -221,8 +230,9 @@ app.use((error, _req, res, _next) => {
 
 mongoose
   .connect(MONGODB_URI)
-  .then(() => {
+  .then(async () => {
     console.log("Connected to MongoDB");
+    await ensureProviders();
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server is running on port ${PORT}`);
     });
