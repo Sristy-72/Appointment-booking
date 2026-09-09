@@ -57,6 +57,7 @@ export default function App() {
   const [lookupEmail, setLookupEmail] = useState("");
   const [myAppointments, setMyAppointments] = useState([]);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
+  const [cancellingAppointmentId, setCancellingAppointmentId] = useState("");
   const [adminFilters, setAdminFilters] = useState({
     date: "",
     status: "",
@@ -70,6 +71,17 @@ export default function App() {
       .then((data) => setProviders(data))
       .catch((err) => setError(err.message));
   }, []);
+
+  useEffect(() => {
+    if (!notice && !error) return undefined;
+
+    const timer = window.setTimeout(() => {
+      setNotice("");
+      setError("");
+    }, 4000);
+
+    return () => window.clearTimeout(timer);
+  }, [notice, error]);
 
   useEffect(() => {
     if (!selectedProvider || !date) {
@@ -91,6 +103,12 @@ export default function App() {
     setSelectedProvider(provider);
     setNotice("");
     setError("");
+  }
+
+  function switchView(nextView) {
+    setNotice("");
+    setError("");
+    setView(nextView);
   }
 
   async function submitBooking(event) {
@@ -147,14 +165,31 @@ export default function App() {
 
   async function cancelAppointment(appointmentId) {
     setError("");
+    setNotice("");
+    setCancellingAppointmentId(appointmentId);
     try {
-      await request(`/appointments/${appointmentId}/cancel`, {
+      const cancelledAppointment = await request(`/appointments/${appointmentId}/cancel`, {
         method: "PATCH",
       });
       setNotice("Your appointment has been cancelled.");
-      await loadMyAppointments();
+      setMyAppointments((appointments) =>
+        appointments.map((appointment) =>
+          appointment.appointmentId === appointmentId
+            ? cancelledAppointment
+            : appointment,
+        ),
+      );
+      setAdminAppointments((appointments) =>
+        appointments.map((appointment) =>
+          appointment.appointmentId === appointmentId
+            ? cancelledAppointment
+            : appointment,
+        ),
+      );
     } catch (err) {
       setError(err.message);
+    } finally {
+      setCancellingAppointmentId("");
     }
   }
 
@@ -202,19 +237,19 @@ export default function App() {
         <nav aria-label="Primary navigation">
           <button
             className={view === "book" ? "nav-active" : ""}
-            onClick={() => setView("book")}
+            onClick={() => switchView("book")}
           >
             Book
           </button>
           <button
             className={view === "appointments" ? "nav-active" : ""}
-            onClick={() => setView("appointments")}
+            onClick={() => switchView("appointments")}
           >
             My appointments
           </button>
           <button
             className={view === "admin" ? "nav-active" : ""}
-            onClick={() => setView("admin")}
+            onClick={() => switchView("admin")}
           >
             Admin
           </button>
@@ -382,6 +417,7 @@ export default function App() {
           <AppointmentList
             appointments={myAppointments}
             onCancel={cancelAppointment}
+            cancellingAppointmentId={cancellingAppointmentId}
           />
         </section>
       )}
@@ -487,6 +523,7 @@ export default function App() {
                         <select
                           aria-label={`Update status for ${appointment.appointmentId}`}
                           value={appointment.status}
+                          disabled={appointment.status === "Cancelled"}
                           onChange={(event) =>
                             changeStatus(
                               appointment.appointmentId,
@@ -517,7 +554,7 @@ export default function App() {
   );
 }
 
-function AppointmentList({ appointments, onCancel }) {
+function AppointmentList({ appointments, onCancel, cancellingAppointmentId }) {
   if (!appointments.length)
     return <p className="empty list-empty">No appointments to show yet.</p>;
   return (
@@ -537,10 +574,14 @@ function AppointmentList({ appointments, onCancel }) {
             <StatusBadge status={appointment.status} />
             {!["Cancelled", "Completed"].includes(appointment.status) && (
               <button
-                className="text-action"
+                type="button"
+                className="cancel-action"
+                disabled={cancellingAppointmentId === appointment.appointmentId}
                 onClick={() => onCancel(appointment.appointmentId)}
               >
-                Cancel
+                {cancellingAppointmentId === appointment.appointmentId
+                  ? "Cancelling..."
+                  : "Cancel appointment"}
               </button>
             )}
           </div>
