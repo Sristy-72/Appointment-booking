@@ -4,7 +4,7 @@ This is a simple full-stack appointment booking project. It lets patients choose
 
 Backend Server on Render :- https://appointment-booking-ghdk.onrender.com/  
 
-Frontend Server On Render :-- https://appointment-booking-1-bctw.onrender.com/
+Frontend Server On Render :-- https://appointment-booking-1-dfl7.onrender.com/
 
 ## What this project can do
 
