@@ -38,7 +38,16 @@ async function request(path, options) {
     headers: { "Content-Type": "application/json" },
     ...options,
   });
-  const payload = await response.json();
+  const contentType = response.headers.get("content-type") || "";
+  const payload = contentType.includes("application/json")
+    ? await response.json()
+    : null;
+
+  if (!payload) {
+    throw new Error(
+      "The API did not return JSON. Check the VITE_API_URL setting in your frontend deployment.",
+    );
+  }
   if (!response.ok) throw new Error(payload.message || "Request failed.");
   return payload;
 }
